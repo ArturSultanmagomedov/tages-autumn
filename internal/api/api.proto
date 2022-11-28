@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+option go_package = "tages-autumn/internal/api/";
+
+/*
+protoc --go_out=. --go_opt=paths=source_relative \
+    --go-grpc_out=. --go-grpc_opt=paths=source_relative \
+    internal/api/api.proto
+ */
+
+message File {
+  string name = 1;
+  bytes b = 2;
+}
+
+message Nothing {}
+
+message FilesList {
+  repeated string names = 1;
+}
+
+message FileName {
+  string name = 1;
+}
+
+service FileService {
+  rpc DownloadFile(FileName) returns (File) {}
+  rpc UploadFile(File) returns (Nothing) {}
+  rpc GetFilesList(Nothing) returns (FilesList) {}
+}
