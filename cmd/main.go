@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	_ "github.com/lib/pq"
 	"github.com/sirupsen/logrus"
 	"go.uber.org/ratelimit"
 	"os"
@@ -9,6 +10,7 @@ import (
 	"syscall"
 	"tages-autumn/configs"
 	"tages-autumn/internal/api"
+	"tages-autumn/internal/repository"
 	"tages-autumn/internal/usecase"
 )
 
@@ -26,21 +28,26 @@ func run() error {
 		return err
 	}
 
+	postgres, err := repository.NewPostgresDB(configs.GetPostgresConfig())
+	if err != nil {
+		return fmt.Errorf("failed to initialize db: %w", err)
+	}
+	defer postgres.Close()
+
+	repo := repository.NewFileRepository(postgres)
+
 	fh := &api.FileHandler{
-		Uc:          usecase.NewFileUsecase(usecase.Deps{Config: configs.GetFilesConfig()}),
-		LoadLimiter: ratelimit.New(configs.GetLimitConfig().Write),
-		ListLimiter: ratelimit.New(configs.GetLimitConfig().Read),
+		Uc:          usecase.NewFileUsecase(usecase.Deps{Config: configs.GetFilesConfig(), Repo: repo}),
+		LoadLimiter: ratelimit.New(configs.GetLimitConfig().Write, ratelimit.Per(1)),
+		ListLimiter: ratelimit.New(configs.GetLimitConfig().Read, ratelimit.Per(1)),
 	}
 
 	srv := api.NewServer(api.Deps{FileHandler: fh})
 
 	go func() {
 		if err := srv.ListenAndServe(configs.GetAddress()); err != nil {
-			logrus.Fatal(fmt.Errorf("filed to init server: %w", err))
+			logrus.Fatalf("filed to init server: %v", err)
 		}
-		//defer func() {
-		//	if err := recover(); err != nil {}
-		//}()
 	}()
 
 	quit := make(chan os.Signal, 1)

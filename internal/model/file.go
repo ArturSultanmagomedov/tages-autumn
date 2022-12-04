@@ -3,7 +3,7 @@ package model
 import "time"
 
 type FileModel struct {
-	Id           int       `db:"id"`
+	Id           string    `db:"id"`
 	FileName     string    `db:"file_name"` //TODO: вместо имени использовать хэш
 	FilePath     string    `db:"file_path"`
 	CreationTime time.Time `db:"creation_time"`

@@ -2,7 +2,6 @@ package api
 
 import (
 	"context"
-	"fmt"
 	"go.uber.org/ratelimit"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -41,12 +40,11 @@ func (f *FileHandler) UploadFile(ctx context.Context, file *File) (*Nothing, err
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "something going wrong: %v", err)
 	}
-	return nil, nil
+	return &Nothing{}, nil
 }
 
 func (f *FileHandler) GetFilesList(ctx context.Context, _ *Nothing) (*FilesList, error) {
-	//f.ListLimiter.Take()
-	fmt.Println("heheheheh")
+	f.ListLimiter.Take()
 	list, err := f.Uc.GetFilesList(ctx)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "something going wrong: %v", err)

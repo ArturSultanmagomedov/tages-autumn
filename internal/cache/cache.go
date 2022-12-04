@@ -2,12 +2,12 @@ package cache
 
 //TODO: подключить настоящий кеш
 
-var fileListCache string
+var fileListCache []string
 
-func GetFileListCache() *string {
-	return &fileListCache
+func GetFileListCache() []string {
+	return fileListCache
 }
 
-func UpdateFileListCache(newValue string) {
+func UpdateFileListCache(newValue []string) {
 	fileListCache = newValue
 }
